@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import AccountIcon from "../icons/AccountIcon";
 import LogoutIcon from "../icons/LogoutIcon";
-import { DashBoardInfo } from "./DashBoard";
+import { DefaultTypes } from "./DashBoard";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -116,13 +116,13 @@ const Account = () => {
         <div className="flex flex-col gap-4  w-full ">
 
 
-          {DashBoardInfo.map((info, index) => (
+          {DefaultTypes.map((info, index) => (
             <div
               key={index}
               className="w-full flex items-center gap-2 py-2  rounded-lg "
             >
               <div className="text-xl">{info.icon}</div>
-              <div className="text-lg font-medium opacity-90">{info.name}</div>
+              <div className="text-lg font-medium opacity-90">{info.typename}</div>
               <div className="text-[#594ef1]">
                 {": "}{10}
               </div>

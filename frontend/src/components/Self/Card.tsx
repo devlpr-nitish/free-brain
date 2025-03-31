@@ -74,7 +74,6 @@ const Card: React.FC<CardProps> = ({ id, title, type, content, tags, createdAt, 
 
     try {
 
-
       const token = localStorage.getItem("token");
       if (!token) {
         toast("Expired token, Please login");

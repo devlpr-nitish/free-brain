@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { motion } from "framer-motion";
+import { z } from "zod";      
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -25,7 +24,7 @@ import {
 } from "./ui/select";
 import { backend_url } from "@/utils/bakendUrl";
 import { useState } from "react";
-import { data, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@/icons/DeleteIcon";
 import axios from "axios";
 
@@ -96,7 +95,10 @@ export function AddContentForm() {
   
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Submitting")
-    
+    console.log(values);
+
+
+
     try {
       if (!token) {
         toast('You must be logged in to add content');
@@ -109,12 +111,12 @@ export function AddContentForm() {
       setLoading(true);
       console.log(values)
 
-      const response = await axios.post(`${backend_url}/contents`, {
+      const response = await axios.post(`${backend_url}/contents`, JSON.stringify(values), {
         headers: {
-          Authorization: `${token}`,
+          Authorization: token,
           'Content-Type': 'application/json',
         },
-        data: JSON.stringify(values)
+        
       });
 
       console.log(response);
@@ -246,7 +248,7 @@ export function AddContentForm() {
           />
 
           <Button
-            disabled={loading}
+            disabled={loading}  
             type="submit"
             className="w-full cursor-pointer bg-[#594EF1] hover:bg-[#594ef1e0]"
           >

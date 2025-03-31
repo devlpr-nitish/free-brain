@@ -56,7 +56,7 @@ const Signin = () => {
             const response = await axios.post(`${backend_url}/user/signin`, {
                 username, password
             })
-
+            
             const token = response.data.token;
 
             localStorage.setItem("token", token);
@@ -74,7 +74,6 @@ const Signin = () => {
             }, 1500)
         } catch (error) {
             console.log(error);
-
             toast("Error, while signin");
         } finally {
             setLoading(false);

@@ -37,6 +37,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { motion } from "framer-motion";
 import ShinnyEffect from "@/components/ShinnyEffect";
 import axios from "axios";
+import { useFetchGet } from "@/hooks/use-fetch";
 
 
 
@@ -44,13 +45,13 @@ import axios from "axios";
 
 
 
-export const DashBoardInfo = [
-  { name: "All", icon: <TiThSmallOutline /> },
-  { name: "Twitter", icon: <FaXTwitter /> },
-  { name: "Video", icon: <LiaFileVideoSolid /> },
-  { name: "Document", icon: <IoDocumentsOutline /> },
-  { name: "Link", icon: <CiLink /> },
-  { name: "Code", icon: <CodeIcon /> },
+export const DefaultTypes = [
+  { typename: "All", icon: <TiThSmallOutline /> },
+  { typename: "Twitter", icon: <FaXTwitter /> },
+  { typename: "Video", icon: <LiaFileVideoSolid /> },
+  { typename: "Document", icon: <IoDocumentsOutline /> },
+  { typename: "Link", icon: <CiLink /> },
+  { typename: "Code", icon: <CodeIcon /> },
 ];
 
 export interface Content {
@@ -72,6 +73,7 @@ const DashBoard = () => {
   const [showLimitedtypes, setShowLimitedtypes] = useState(true);
   const [contents, setContents] = useState<Content[]>([]);
   const [selectedType, setSelectedType] = useState("All");
+  const [types, setTypes] = useState(DefaultTypes); 
 
 
   const token = localStorage.getItem("token");
@@ -90,8 +92,6 @@ const DashBoard = () => {
     : contents.filter((content) => content.typename.toLowerCase() === selectedType.toLowerCase());
 
 
-
-
   const typeSchema = z.object({
     typename: z.string().min(3, "type name cannot be less than 3 length").max(10, "type name cannot be more than 10 length")
   })
@@ -104,13 +104,32 @@ const DashBoard = () => {
   });
 
   async function onSubmit(values: z.infer<typeof typeSchema>) {
+    try {
+      setLoading(true);
 
+      const response = await axios.post(`${backend_url}/types`, JSON.stringify(values), {
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+      });
+
+
+      const { success, message } = response.data;
+      if(success){
+        form.reset();
+      }
+      toast(message)
+
+    } catch (error) {
+      toast("Internal server error while adding types");
+    } finally {
+      setLoading(false)
+    }
   }
 
+  useEffect(() => {   
 
-
-
-  useEffect(() => {
     const fetchContents = async () => {
       try {
         setLoading(true);
@@ -128,14 +147,11 @@ const DashBoard = () => {
           `${backend_url}/contents`,
           {
             headers: {
-              Authorization: `${token}`,
+              Authorization: token,
               'Content-Type': 'application/json',
             }
           }
         );
-
-        console.log(response);
-        
 
         const { contents, success, message } = response.data;
         if(success){
@@ -153,12 +169,55 @@ const DashBoard = () => {
     }
 
     fetchContents();
-  }, [loading])
 
 
-  const visibleTypes = showLimitedtypes ? DashBoardInfo.slice(0, 6) : DashBoardInfo;
+    const fetchTypes = async () => {
+      try {
+        setLoading(true);
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+          toast("Expired token, Please login");
+          setTimeout(() => {
+            navigate("/auth");
+          }, 1000);
+          return;
+        }
+
+        const response = await axios.get(
+          `${backend_url}/types`,
+          {
+            headers: {
+              Authorization: token,
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+
+        const { totalTypes, success, message } = response.data;
+        if(success){
+          setTypes([...DefaultTypes, ...totalTypes]);
+        }else{
+          toast(message || "Internal server error")
+        }
 
 
+      } catch (error) {
+        toast("Internal server error while fetching content")
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTypes();
+
+
+  }, [loading]);
+
+ 
+
+  const visibleTypes = showLimitedtypes ? types.slice(0, 6) : types;
+  
 
   return (
     <div className="w-full bg-[#171717] rounded-md min-h-[750px] flex flex-col relative overflow-hidden">
@@ -169,11 +228,11 @@ const DashBoard = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
             key={index}
-            className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg cursor-pointer border border-[#594ef1] shadow-sm hover:bg-[#594ef1] transition ${selectedType == info.name ? "bg-[#594ef1] text-white" : "hover:bg-[#594ef1] hover:text-white"}  `}
-            onClick={() => setSelectedType(info.name)}
+            className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg cursor-pointer border border-[#594ef1] shadow-sm hover:bg-[#594ef1] transition ${selectedType == info.typename ? "bg-[#594ef1] text-white" : "hover:bg-[#594ef1] hover:text-white"}  `}
+            onClick={() => setSelectedType(info.typename)}
           >
             <div className="text-xl">{info.icon}</div>
-            <div className="text-lg font-medium">{info.name}</div>
+            <div className="text-lg font-medium">{info.typename}</div>
           </motion.div>
         ))}
 
@@ -194,7 +253,7 @@ const DashBoard = () => {
               variant="primary"
               startIcon={<PlusIcon />}
               text="add new type"
-              onClick={() => { }}
+              onClick={() => {}}
             />
 
           </DialogTrigger>
@@ -374,7 +433,7 @@ const DashBoard = () => {
               :
 
               (
-                filteredContents.map((content) => (
+                filteredContents?.map((content) => (
 
                   <Card
                     key={content._id}
