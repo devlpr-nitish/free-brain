@@ -53,7 +53,7 @@ export default class UserController {
 
   async signin(req: Request, res: Response) {
     try {
-      
+
       const { username, password } = req.body;
 
       const parseData = validateUser.safeParse({ username, password });
@@ -64,46 +64,46 @@ export default class UserController {
           message: parseData.error.issues[0].message,
         });
       }
-      
-    // check for user existence
-    const existingUser = await UserModel.findOne({ username });
-    
-    
-    if (!existingUser || !existingUser.password) {
-      return res.status(200).json({
-        success: false,
-        message: "user does not exists",
-      });
-    }
-    
-    // check username and password
-    
-    const isMatch = await bcrypt.compare(password, existingUser.password);
-    
-    if (!isMatch) {
-      return res.status(200).json({
-        success: false,
-        message: "Incorrect credentials",
-      });
-    }
 
-    const token = jwt.sign(
-      { userId: existingUser._id },
-      process.env.JWT_SECRET!,
-      {
-        expiresIn: "2d",
+      // check for user existence
+      const existingUser = await UserModel.findOne({ username });
+
+
+      if (!existingUser || !existingUser.password) {
+        return res.status(200).json({
+          success: false,
+          message: "user does not exists",
+        });
       }
-    );
 
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-      token,
-    });
+      // check username and password
 
-    
+      const isMatch = await bcrypt.compare(password, existingUser.password);
+
+      if (!isMatch) {
+        return res.status(200).json({
+          success: false,
+          message: "Incorrect credentials",
+        });
+      }
+
+      const token = jwt.sign(
+        { userId: existingUser._id },
+        process.env.JWT_SECRET!,
+        {
+          expiresIn: "2d",
+        }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        token,
+      });
+
+
     } catch (error) {
-        console.log(error);
+      console.log(error);
 
       return res.status(500).json({
         success: false,

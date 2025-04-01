@@ -6,9 +6,9 @@ import UserAuth, { AuthRequest } from "../users/user.middleware";
 const contentRouter = Router();
 const contentController = new ContentController();
 
-// contentRouter.get("/:contentId",UserAuth , (req:Request,res:Response,next: NextFunction)=>{
-//     contentController.findContentById(req as AuthRequest,res,next);
-// });
+contentRouter.get("/:contentId",UserAuth , (req:Request,res:Response,next: NextFunction)=>{
+    contentController.findContentById(req as AuthRequest,res,next);
+});
 contentRouter.delete("/:contentId",UserAuth , (req:Request,res:Response,next: NextFunction)=>{
     contentController.deleteContent(req as AuthRequest,res,next);
 });

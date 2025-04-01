@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthRequest } from "../users/user.middleware";
 import { ContentModel, objectIdSchema, Validatecontent } from "./content.schema";
-import { TypeModel } from "../Types/type.schema";
+import { DefaultTypeModel, TypeModel } from "../Types/type.schema";
 
 
 
@@ -40,8 +40,6 @@ export default class ContentController{
         try {
             const {link, title, content,tags, typeId} = req.body;
             const userId = req.userId;
-            console.log("userId: ");
-            console.log(userId);
             
 
             if(!userId){
@@ -50,7 +48,7 @@ export default class ContentController{
                     message: "Unauthorized user",
                 });
             }
-            const type_name = await TypeModel.findById(typeId);
+            const type_name = await TypeModel.findById(typeId) || await DefaultTypeModel.findById(typeId);
 
             const parseData = Validatecontent.safeParse({ title,content, link ,typeId , typename:type_name?.typename, tags, userId });
 

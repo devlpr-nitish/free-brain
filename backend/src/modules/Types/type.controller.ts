@@ -4,8 +4,11 @@ import { DefaultTypeModel, TypeModel, validateType } from "./type.schema";
 
 export default class TypeController {
   async addType(req: AuthRequest, res: Response, next: NextFunction) {
+    console.log(req);
+    
     try {
       const userId = req.userId;
+      
       if (!userId) {
         return res.status(401).json({
           success: false,
@@ -14,7 +17,7 @@ export default class TypeController {
       }
 
       const { typename } = req.body;
-
+      
       const parseData = validateType.safeParse({ typename, userId });
       if (!parseData.success) {
         return res.status(200).json({
@@ -83,9 +86,7 @@ export default class TypeController {
 
       return res.status(201).json({
         success: true,
-        //   message: "Type created successfully",
-        types,
-        defaulttypes
+        totalTypes : [...defaulttypes,...types]
       });
     } catch (error) {
       console.log(error);
