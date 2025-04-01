@@ -1,26 +1,30 @@
 import { useNavigate } from "react-router-dom";
 import AccountIcon from "../icons/AccountIcon";
 import LogoutIcon from "../icons/LogoutIcon";
-import { DefaultTypes } from "./DashBoard";
+import { DefaultIcons, Types } from "./DashBoard";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy } from "lucide-react";
+import { Copy, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DeleteIcon from "@/icons/DeleteIcon";
-import {motion} from "framer-motion";
+import { motion } from "framer-motion";
 import ShinnyEffect from "@/components/ShinnyEffect";
+import { useEffect, useState } from "react";
+import { backend_url } from "@/utils/bakendUrl";
+import axios from "axios";
 
 
 
 const Account = () => {
 
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [types, setTypes] = useState<Types[]>([]);
 
   const logoutUser = () => {
 
     localStorage.removeItem("token");
-    localStorage.removeItem("username");
 
     toast("User Logged out !!!");
 
@@ -28,7 +32,52 @@ const Account = () => {
       navigate("/auth")
     }, 1000)
   }
-  
+
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast("Expired token, Please login");
+      setTimeout(() => {
+        navigate("/auth");
+      }, 1000);
+      return;
+    }
+
+    const fetchTypes = async () => {
+      try {
+        setLoading(true);
+
+
+        const response = await axios.get(
+          `${backend_url}/types`,
+          {
+            headers: {
+              Authorization: token,
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+
+        const { totalTypes, success, message } = response.data;
+        if (success) {
+          setTypes(totalTypes);
+        } else {
+          toast(message || "Internal server error")
+        }
+
+
+      } catch (error) {
+        toast("Internal server error while fetching content")
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTypes();
+  })
+
+
   return (
     <div className="relative overflow-hidden flex md:flex-row flex-wrap flex-col w-full md:px-24 md:py-12 px-4 py-6 gap-12 bg-[#171717] text-white min-h-[600px]">
 
@@ -116,13 +165,13 @@ const Account = () => {
         <div className="flex flex-col gap-4  w-full ">
 
 
-          {DefaultTypes.map((info, index) => (
+          {types.map((type, index) => (
             <div
               key={index}
               className="w-full flex items-center gap-2 py-2  rounded-lg "
             >
-              <div className="text-xl">{info.icon}</div>
-              <div className="text-lg font-medium opacity-90">{info.typename}</div>
+              <div className="text-xl">{DefaultIcons[type.typename] || <Globe2 />}</div>
+              <div className="text-lg font-medium opacity-90">{type.typename}</div>
               <div className="text-[#594ef1]">
                 {": "}{10}
               </div>
@@ -138,7 +187,7 @@ const Account = () => {
         </div>
 
         <div className="">
-           
+
           <div className="flex flex-row items-center gap-2  py-2">
             <div className="bg-[#594ef13f] p-2 rounded-md text-white cursor-pointer hover:text-red-500">
               <DeleteIcon />
@@ -158,7 +207,7 @@ const Account = () => {
               <Copy />
             </Button>
           </div>
-          
+
         </div>
       </div>
     </div>

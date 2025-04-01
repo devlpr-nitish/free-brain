@@ -25,18 +25,18 @@ const Signin = () => {
 
     const [loading, setLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [loginOrSignup, setloginOrSignup] = useState("");
+    const [loginOrSignup, setloginOrSignup] = useState("login");
     const [visible, setVisible] = useState(true);
 
 
-    const token = localStorage.getItem("token");
-    if (token) {
-        toast("You are already loggedIn");
-        setTimeout(() => {
-            navigate("/user");
-        }, 1000);
-        return;
-    }
+    // const token = localStorage.getItem("token");
+    // if (token) {
+    //     toast("You are already loggedIn");
+    //     setTimeout(() => {
+    //         navigate("/user");
+    //     }, 1000);
+    //     return;
+    // }
 
 
 
@@ -55,19 +55,19 @@ const Signin = () => {
 
             const response = await axios.post(`${backend_url}/user/signin`, {
                 username, password
-            })
+            });
+            const {success, message, token} = response.data;
             
-            const token = response.data.token;
-
-            localStorage.setItem("token", token);
-            localStorage.setItem("username", username);
-
-            toast(response.data.message);
-            setIsLoggedIn(true);
-
-            if (!response.data.success) {
+            if (!success) {
+                toast(message);
                 return;
+            }else{   
+                toast(message);
+                localStorage.setItem("token", token);
             }
+
+            setIsLoggedIn(true);    
+
 
             setTimeout(() => {
                 navigate("/dashboard");
@@ -203,8 +203,8 @@ const Signin = () => {
                         <select
                             onChange={(e) => setloginOrSignup(e.target.value)}
                             className="border border-[#594ef1] py-1 px-2 rounded-md cursor-pointer outline-0" name="" id="">
-                            <option className="text-black border border-white rounded-md" value="signin">Signup</option>
                             <option className="text-black border border-white rounded-md" value="login">Login</option>
+                            <option className="text-black border border-white rounded-md" value="signin">Signup</option>
                         </select>
                         <h1 className="text-xl text-wrap text-center font-bold text-white">to <span className="text-[#594ef1]" >Free Brain</span></h1>
                     </div>

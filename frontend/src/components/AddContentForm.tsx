@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";      
-import { Button } from "@/components/ui/button";
+import { z } from "zod";
+import { Button } from "../components/ui/button";
 import { toast } from "sonner";
 
 import {
@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { backend_url } from "@/utils/bakendUrl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@/icons/DeleteIcon";
 import axios from "axios";
@@ -55,26 +55,19 @@ const formSchema = z.object({
 
 
 
-const typeNameValue = [
-  {
-    name: "twitter",
-    typeId: "67c74de8b990474f13e86d02"
-  },
-  {
-    name: "docs",
-    typeId: "67c74de8b990474f13e86d03"
-  },
-  {
-    name: "youtube",
-    typeId: "67c74de8b990474f13e86d04"
-  },
-  {
-    name: "code",
-    typeId: "67c74de8b990474f13e86d05"
-  }
-]
+export interface Types {
+  _id: string;
+  typename: string;
+  __v: number;
+  userId?: string;
+}
 
 export function AddContentForm() {
+  console.log("hello from add form");
+
+  const [types, setTypes] = useState<Types[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,20 +80,16 @@ export function AddContentForm() {
     },
   });
 
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
-  console.log(token);
-  
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async(values: z.infer<typeof formSchema>) => {
     console.log("Submitting")
     console.log(values);
 
-
-
     try {
-      if (!token) {
+      const token = localStorage.getItem("token");
+      console.log(token);
+      
+      if (!token) { 
         toast('You must be logged in to add content');
         setTimeout(() => {
           navigate("/auth");
@@ -111,12 +100,12 @@ export function AddContentForm() {
       setLoading(true);
       console.log(values)
 
-      const response = await axios.post(`${backend_url}/contents`, JSON.stringify(values), {
+      const response = await axios.post(`${backend_url}/contents/`, JSON.stringify(values), {
         headers: {
           Authorization: token,
           'Content-Type': 'application/json',
         },
-        
+
       });
 
       console.log(response);
@@ -141,7 +130,53 @@ export function AddContentForm() {
     form.setValue("links", newLinks.length > 0 ? newLinks : [""]);
   };
 
-  
+
+  useEffect(() => {
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast("Expired token, Please login");
+      setTimeout(() => {
+        navigate("/auth");
+      }, 1000);
+      return;
+    }
+
+    const fetchTypes = async () => {
+      try {
+        setLoading(true);
+
+
+        const response = await axios.get(
+          `${backend_url}/types`,
+          {
+            headers: {
+              Authorization: token,
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+
+        const { totalTypes, success, message } = response.data;
+        if (success) {
+          setTypes(totalTypes);
+        } else {
+          toast(message || "Internal server error")
+        }
+
+
+      } catch (error) {
+        toast("Internal server error while fetching content")
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTypes();
+  }, [])
+
+
+
 
   return (
     <div className="p-14 rounded-md bg-transparent text-white relative overflow-hidden">
@@ -236,9 +271,10 @@ export function AddContentForm() {
 
                   <SelectContent className="bg-[#0A0A0A] flex flex-col gap-4 text-white outline-0 border-none">
                     {
-                      typeNameValue.map((type) => (
-                        <SelectItem value={type.typeId}>{type.name}</SelectItem>
-                      ))
+                      types.filter((type) => type._id !== '67ec17abb1d00298145cfa99') // excluding 'All type'
+                        .map((type, index) => (
+                          <SelectItem key={index} value={type._id}>{type.typename}</SelectItem>
+                        ))
                     }
                   </SelectContent>
                 </Select>
@@ -248,7 +284,8 @@ export function AddContentForm() {
           />
 
           <Button
-            disabled={loading}  
+            disabled={loading}
+            onClick={() => console.log("Clicked")}
             type="submit"
             className="w-full cursor-pointer bg-[#594EF1] hover:bg-[#594ef1e0]"
           >

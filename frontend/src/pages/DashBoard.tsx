@@ -7,11 +7,11 @@ import { MyButton } from "../components/Self/MyButton";
 import ShareICon from "../icons/ShareICon";
 import PlusIcon from "../icons/PlusIcon";
 import CodeIcon from "../icons/CodeIcon";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "@/components/Self/Card";
 
-import { Copy } from "lucide-react"
+import { Copy, Globe2Icon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -30,29 +30,30 @@ import { toast } from "sonner";
 import { backend_url } from "@/utils/bakendUrl";
 import ExpandIcon from "@/icons/ExpandIcon";
 import CollapseIcon from "@/icons/CollapseIcon";
-import { z } from "zod";
+import { string, z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { motion } from "framer-motion";
 import ShinnyEffect from "@/components/ShinnyEffect";
 import axios from "axios";
-import { useFetchGet } from "@/hooks/use-fetch";
 
 
 
 
 
+export interface DefaultIconsType {
+  [key: string]: ReactNode;
+};
 
-
-export const DefaultTypes = [
-  { typename: "All", icon: <TiThSmallOutline /> },
-  { typename: "Twitter", icon: <FaXTwitter /> },
-  { typename: "Video", icon: <LiaFileVideoSolid /> },
-  { typename: "Document", icon: <IoDocumentsOutline /> },
-  { typename: "Link", icon: <CiLink /> },
-  { typename: "Code", icon: <CodeIcon /> },
-];
+export const DefaultIcons:DefaultIconsType =
+{
+  "All": <TiThSmallOutline />,
+  "Twittes": <FaXTwitter />,
+  "Youtube": <LiaFileVideoSolid />,
+  "Document": <IoDocumentsOutline />,
+  "Code": <CodeIcon />,
+}
 
 export interface Content {
   title: string;
@@ -66,14 +67,21 @@ export interface Content {
   createdAt: string;
 }
 
+export  interface Types{
+  _id: string;
+  typename: string;
+  __v: number;
+  userId?: string;
+}
+
 
 const DashBoard = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [showLimitedtypes, setShowLimitedtypes] = useState(true);
   const [contents, setContents] = useState<Content[]>([]);
-  const [selectedType, setSelectedType] = useState("All");
-  const [types, setTypes] = useState(DefaultTypes); 
+  const [selectedType, setSelectedType] = useState<string>("All");
+  const [loading, setLoading] = useState(false);
+  const [types, setTypes] = useState<Types[]>([]);
 
 
   const token = localStorage.getItem("token");
@@ -104,6 +112,7 @@ const DashBoard = () => {
   });
 
   async function onSubmit(values: z.infer<typeof typeSchema>) {
+    
     try {
       setLoading(true);
 
@@ -116,7 +125,7 @@ const DashBoard = () => {
 
 
       const { success, message } = response.data;
-      if(success){
+      if (success) {
         form.reset();
       }
       toast(message)
@@ -128,7 +137,7 @@ const DashBoard = () => {
     }
   }
 
-  useEffect(() => {   
+  useEffect(() => {
 
     const fetchContents = async () => {
       try {
@@ -154,9 +163,9 @@ const DashBoard = () => {
         );
 
         const { contents, success, message } = response.data;
-        if(success){
+        if (success) {
           setContents(contents);
-        }else{
+        } else {
           toast(message || "Internal server error")
         }
 
@@ -168,7 +177,6 @@ const DashBoard = () => {
       }
     }
 
-    fetchContents();
 
 
     const fetchTypes = async () => {
@@ -195,9 +203,9 @@ const DashBoard = () => {
         );
 
         const { totalTypes, success, message } = response.data;
-        if(success){
-          setTypes([...DefaultTypes, ...totalTypes]);
-        }else{
+        if (success) {
+          setTypes(totalTypes);
+        } else {
           toast(message || "Internal server error")
         }
 
@@ -211,29 +219,30 @@ const DashBoard = () => {
 
     fetchTypes();
 
+    fetchContents();
 
   }, [loading]);
 
- 
+
 
   const visibleTypes = showLimitedtypes ? types.slice(0, 6) : types;
-  
+
 
   return (
     <div className="w-full bg-[#171717] rounded-md min-h-[750px] flex flex-col relative overflow-hidden">
       <div className="flex  items-center md:flex-row flex-wrap w-full p-3 bg-[#171717] border-b-2  border-black shadow-md justify-center gap-6">
-        {visibleTypes.map((info, index) => (
+        {visibleTypes.map((type, index) => (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
             key={index}
-            className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg cursor-pointer border border-[#594ef1] shadow-sm hover:bg-[#594ef1] transition ${selectedType == info.typename ? "bg-[#594ef1] text-white" : "hover:bg-[#594ef1] hover:text-white"}  `}
-            onClick={() => setSelectedType(info.typename)}
+            className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg cursor-pointer border border-[#594ef1] shadow-sm hover:bg-[#594ef1] transition ${selectedType == type.typename ? "bg-[#594ef1] text-white" : "hover:bg-[#594ef1] hover:text-white"}  `}
+            onClick={() => setSelectedType(type.typename)}
           >
-            <div className="text-xl">{info.icon}</div>
-            <div className="text-lg font-medium">{info.typename}</div>
-          </motion.div>
+            <div className="text-xl">{DefaultIcons[type.typename] || <Globe2Icon />}</div>
+            <div className="text-lg font-medium">{type.typename}</div>
+          </motion.div> 
         ))}
 
         <motion.div
@@ -253,7 +262,7 @@ const DashBoard = () => {
               variant="primary"
               startIcon={<PlusIcon />}
               text="add new type"
-              onClick={() => {}}
+              onClick={() => { }}
             />
 
           </DialogTrigger>

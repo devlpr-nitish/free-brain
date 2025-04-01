@@ -33,6 +33,7 @@ import { toast } from "sonner";
 const DetailContent = () => {
     const { id } = useParams();
     const [contentDetail, setContentDetail] = useState({});
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const { content, link, tags, title, typename, createdAt }: any = contentDetail;
@@ -51,7 +52,7 @@ const DetailContent = () => {
                     }, 1000);
                     return;
                 }
-
+                setLoading(true);
 
                 const response = await axios.get(`${backend_url}/contents/${id}`, {
                     headers: {
@@ -60,17 +61,21 @@ const DetailContent = () => {
                     }
                 })
 
-                const { success, content } = response.data;
-                setContentDetail(content);
+                const { success, content, message } = response.data;
+                if(success){    
+                    setContentDetail(content);
+                }else{
+                    toast(message)
+                }
 
             } catch (error) {
-
+                
             } finally {
-
+                setLoading(false);
             }
         }
 
-        fetchContentById()
+        fetchContentById();
     })
 
 
