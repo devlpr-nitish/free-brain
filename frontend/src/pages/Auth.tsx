@@ -14,7 +14,7 @@ import ShinnyEffect from "@/components/ShinnyEffect";
 // const backend_url = import.meta.env.BACKEND_URL;
 
 
-const Signin = () => {
+const Auth = () => {
 
     const navigate = useNavigate();
 
@@ -260,4 +260,4 @@ const Signin = () => {
     )
 }
 
-export default Signin;
+export default Auth;

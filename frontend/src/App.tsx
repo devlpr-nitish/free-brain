@@ -5,11 +5,11 @@ import NavBar from "./components/NavBar";
 import Home from "./pages/Home";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
-import Signin from "./pages/Auth";
 import AddContent from "./pages/AddContent";
 import "./index.css";
 import DetailContent from "./pages/DetailContent";
 import { TypesProvider } from "./contexts/TypesContect";
+import Auth from "./pages/Auth";
 
 function App() {
   return (
@@ -24,7 +24,7 @@ function App() {
               <Route path="/dashboard" element={<DashBoard />} />
               <Route path="/addcontent" element={<AddContent />} />
               <Route path="/user" element={<Account />} />
-              <Route path="/auth" element={<Signin />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/content/:id" element={<DetailContent />} />
               <Route path="*" element={<NotFound />} />
 
